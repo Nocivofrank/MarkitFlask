@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head><title>Social Site</title></head>
+<body>
+<h1>Social Feed</h1>
+
+{% if session.get('username') %}
+<p>Welcome, {{ session['username'] }} | <a href="/logout">Logout</a></p>
+<form action="/post" method="POST">
+    <textarea name="content" required></textarea>
+    <button type="submit">Post</button>
+</form>
+{% else %}
+<p><a href="/login">Login</a> or <a href="/register">Register</a></p>
+{% endif %}
+
+<ul>
+{% for post in posts %}
+    <li><strong>{{ post.user.username }}:</strong> {{ post.content }}</li>
+{% endfor %}
+</ul>
+</body>
+</html>
