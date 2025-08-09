@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, session
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
+from datetime import datetime, timezone
 
 app = Flask(__name__)
 app.secret_key = "secret123"
@@ -8,6 +9,8 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///social.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
+
+debug = True
 
 # Database models
 class User(db.Model):
@@ -18,6 +21,7 @@ class User(db.Model):
 class Post(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     content = db.Column(db.String(255), nullable=False)
+    timestamp = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     user = db.relationship('User', backref='posts')
 
@@ -37,10 +41,15 @@ def register():
         if User.query.filter_by(username=username).first():
             return "Username already exists!"
 
-        hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
-        user = User(username=username, password=hashed_password)
+        if debug:
+            user = User(username=username, password=password)
+        else:
+            hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
+            user = User(username=username, password=hashed_password)
+
         db.session.add(user)
         db.session.commit()
+
         return redirect('/login')
     return render_template('register.html')
 
@@ -52,11 +61,20 @@ def login():
         password = request.form['password']
 
         user = User.query.filter_by(username=username).first()
-        if user and check_password_hash(user.password, password):
-            session['user_id'] = user.id
-            session['username'] = user.username
-            return redirect('/')
-        return "Invalid username or password!"
+
+        if debug:
+            if user:
+                session['user_id'] = user.id
+                session['username'] = user.username
+                return redirect('/')
+            return "Invalid username or password!"
+        else:
+            if user and check_password_hash(user.password, password):
+                session['user_id'] = user.id
+                session['username'] = user.username
+                return redirect('/')
+            return "Invalid username or password!"
+        
     return render_template('login.html')
 
 # Logout

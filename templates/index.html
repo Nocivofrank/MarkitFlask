@@ -1,23 +1,32 @@
-<!DOCTYPE html>
-<html>
-<head><title>Social Site</title></head>
-<body>
-<h1>Social Feed</h1>
+{% extends "base.html" %}
+{% block title %}Social Feed{% endblock %}
+{% block content %}
 
 {% if session.get('username') %}
-<p>Welcome, {{ session['username'] }} | <a href="/logout">Logout</a></p>
-<form action="/post" method="POST">
-    <textarea name="content" required></textarea>
-    <button type="submit">Post</button>
-</form>
+<div class="card mb-4">
+    <div class="card-body">
+        <form action="/post" method="POST">
+            <textarea class="form-control mb-2" name="content" placeholder="What's on your mind?" required></textarea>
+            <button class="btn btn-primary" type="submit">Post</button>
+        </form>
+    </div>
+</div>
 {% else %}
-<p><a href="/login">Login</a> or <a href="/register">Register</a></p>
+<div class="alert alert-info">Please <a href="/login">login</a> or <a href="/register">register</a> to post.</div>
 {% endif %}
 
-<ul>
 {% for post in posts %}
-    <li><strong>{{ post.user.username }}:</strong> {{ post.content }}</li>
+<div class="card mb-3">
+    <div class="card-body">
+        <h6 class="card-subtitle mb-1 text-muted">
+            {{ post.user.username }}
+        </h6>
+        <small class="text-secondary">
+            {{ post.timestamp.strftime("%b %d, %Y %I:%M %p") }}
+        </small>
+        <p class="card-text mt-2">{{ post.content }}</p>
+    </div>
+</div>
 {% endfor %}
-</ul>
-</body>
-</html>
+
+{% endblock %}
